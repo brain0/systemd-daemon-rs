@@ -7,8 +7,9 @@ use tokio_core::reactor::{PollEvented, Handle};
 use tokio::reactor::{PollEvented2, Handle};
 #[cfg(feature = "tokio")]
 use mio::Ready;
-use std::{io, mem, error, fmt};
+use std::{io, mem};
 use super::timer::LinuxTimer;
+use super::error::Error;
 
 #[cfg(feature = "tokio-core")]
 #[derive(Debug)]
@@ -75,42 +76,6 @@ struct ReactorData(Option<Handle>);
 enum SystemdNotifierInner {
     Starting { watchdog_tick: Option<Duration>, reactor_data: ReactorData },
     Running { watchdog_timer: Timer },
-}
-
-#[derive(Debug)]
-pub enum Error {
-    NotRunningWithSystemd,
-    Io(io::Error),
-}
-
-const NOT_RUNNING_WITH_SYSTEMD: &str = "Not running with systemd";
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Error::NotRunningWithSystemd => write!(f, "{}", NOT_RUNNING_WITH_SYSTEMD),
-            Error::Io(ref err) => err.fmt(f),
-        }
-    }
-}
-
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        NOT_RUNNING_WITH_SYSTEMD
-    }
-
-    fn cause(&self) -> Option<&error::Error> {
-        match *self {
-            Error::NotRunningWithSystemd => None,
-            Error::Io(ref err) => Some(err),
-        }
-    }
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::Io(err)
-    }
 }
 
 #[derive(Debug)]

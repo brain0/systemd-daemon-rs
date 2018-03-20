@@ -14,6 +14,9 @@ extern crate tokio;
 #[cfg(feature = "tokio-core")]
 extern crate tokio_core;
 
-pub mod systemd_notifier;
+mod error;
+mod systemd_notifier;
 mod timer;
+
 pub use systemd_notifier::SystemdNotifier;
+pub use error::Error;
