@@ -78,10 +78,20 @@ enum SystemdNotifierInner {
     Running { watchdog_timer: Timer },
 }
 
+/// A future for notifying systemd about daemon startup and pinging the watchdog.
+///
+/// When first polled, this future will notify systemd that daemon startup has completed.
+/// If the systemd watchdog is disabled for this service, the future will then complete
+/// successfully. Otherwise, it will ping the watchdog until the main loop shuts down.
+///
+/// If the application was not started with systemd or notify access was not enabled,
+/// this future will complete with [`Error::NotRunningWithSystemd`](enum.Error.html#variant.NotRunningWithSystemd).
+/// To ensure that the daemon works properly with or without systemd, this error should be silently ignored.
 #[derive(Debug)]
 pub struct SystemdNotifier(SystemdNotifierInner);
 
 impl SystemdNotifier {
+    /// Creates a new SystemdNotifier.
     #[cfg(feature = "tokio-core")]
     pub fn new(handle: &Handle) -> SystemdNotifier {
         SystemdNotifier(SystemdNotifierInner::Starting {
@@ -90,6 +100,7 @@ impl SystemdNotifier {
         })
     }
 
+    /// Creates a new SystemdNotifier using the default reactor.
     #[cfg(feature = "tokio")]
     pub fn new() -> SystemdNotifier {
         SystemdNotifier(SystemdNotifierInner::Starting {
@@ -98,6 +109,7 @@ impl SystemdNotifier {
         })
     }
 
+    /// Creates a new SystemdNotifier.
     #[cfg(feature = "tokio")]
     pub fn new_with_handle(handle: &Handle) -> SystemdNotifier {
         SystemdNotifier(SystemdNotifierInner::Starting {

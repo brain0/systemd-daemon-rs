@@ -1,4 +1,7 @@
+//! A crate for integrating tokio-based daemons with systemd.
+
 #![cfg(target_os = "linux")]
+#![warn(missing_docs)]
 
 #[cfg(not(any(feature = "tokio", feature = "tokio-core")))]
 compile_error!("Either the feature \"tokio\" or \"tokio-core\" must be enabled for this crate.");

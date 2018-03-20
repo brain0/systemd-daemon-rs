@@ -1,8 +1,12 @@
 use std::{error, fmt, io};
 
+/// Error type for the systemd_daemon crate.
 #[derive(Debug)]
 pub enum Error {
+    /// The application has not been started by systemd or notify
+    /// access was not enabled in the systemd service.
     NotRunningWithSystemd,
+    /// An std::io::Error occurred.
     Io(io::Error),
 }
 
