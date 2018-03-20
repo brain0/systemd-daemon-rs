@@ -74,7 +74,7 @@ struct ReactorData(Option<Handle>);
 
 #[derive(Debug)]
 enum SystemdNotifierInner {
-    Starting { watchdog_tick: Option<Duration>, reactor_data: ReactorData },
+    Starting { reactor_data: ReactorData },
     Running { watchdog_timer: Timer },
 }
 
@@ -95,7 +95,6 @@ impl SystemdNotifier {
     #[cfg(feature = "tokio-core")]
     pub fn new(handle: &Handle) -> SystemdNotifier {
         SystemdNotifier(SystemdNotifierInner::Starting {
-            watchdog_tick: watchdog_enabled(false),
             reactor_data: ReactorData(handle.clone()),
         })
     }
@@ -104,7 +103,6 @@ impl SystemdNotifier {
     #[cfg(feature = "tokio")]
     pub fn new() -> SystemdNotifier {
         SystemdNotifier(SystemdNotifierInner::Starting {
-            watchdog_tick: watchdog_enabled(false),
             reactor_data: ReactorData(None),
         })
     }
@@ -113,7 +111,6 @@ impl SystemdNotifier {
     #[cfg(feature = "tokio")]
     pub fn new_with_handle(handle: &Handle) -> SystemdNotifier {
         SystemdNotifier(SystemdNotifierInner::Starting {
-            watchdog_tick: watchdog_enabled(false),
             reactor_data: ReactorData(Some(handle.clone())),
         })
     }
@@ -137,9 +134,9 @@ impl Future for SystemdNotifier {
     fn poll(&mut self) -> Poll<(), Error> {
         let mut watchdog_timer = {
             let (watchdog_tick, reactor_data) = match self.0 {
-                SystemdNotifierInner::Starting{ watchdog_tick, ref reactor_data } => {
+                SystemdNotifierInner::Starting{ ref reactor_data } => {
                     if Self::notify_ready() {
-                        if let Some(watchdog_tick) = watchdog_tick {
+                        if let Some(watchdog_tick) = watchdog_enabled(false) {
                             (watchdog_tick, reactor_data)
                         } else {
                             // Watchdog timer is not enabled
